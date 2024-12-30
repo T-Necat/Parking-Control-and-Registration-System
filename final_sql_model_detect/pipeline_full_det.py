@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from ultralytics import YOLO
 import supervision as sv
 import cv2
@@ -6,18 +10,14 @@ from datetime import datetime
 import psycopg2
 from deep_sort_realtime.deepsort_tracker import DeepSort
 import numpy as np
+from config import DB_CONFIG, MODEL_PATHS, VIDEO_PATH
 
 
 # ---------------------- Veritabanı Bağlantısı ----------------------
-conn = psycopg2.connect(
-    host="localhost", 
-    database="donem_sonu", 
-    port = 5433,
-    user="postgres", 
-    password="220902"
-)
+conn = psycopg2.connect(**DB_CONFIG)
 conn.autocommit = True
 cur = conn.cursor()
+
 
 # ---------------------- Model ve Sınıf Bilgileri ----------------------
 vehicle_classes = {
@@ -39,20 +39,28 @@ class_names = [
 
 # ---------------------- Cihaz Seçimi ----------------------
 device = "mps" if torch.cuda.is_available() else "cpu"
+#device = "mps "  #Eğer cihaz mac ise 
 print(f"Using device: {device}")
 
 # ---------------------- Modellerin Yüklenmesi ----------------------
-
-vehicle_model = YOLO("//Users//tunahanbg//Code//vscode_files//db_donem_sonu//final_sql_model_detect//models//vehicle_detect_v1.pt").to(device)
-plate_model = YOLO("//Users//tunahanbg//Code//vscode_files//db_donem_sonu//final_sql_model_detect//models//plate_detection.pt").to(device)
-char_model = YOLO("//Users//tunahanbg//Code//vscode_files//db_donem_sonu//final_sql_model_detect//models//plate_number_det.pt").to(device)
+vehicle_model = YOLO(MODEL_PATHS["vehicle_model"]).to(device)
+plate_model = YOLO(MODEL_PATHS["plate_model"]).to(device)
+char_model = YOLO(MODEL_PATHS["char_model"]).to(device)
 
 # ---------------------- Video Kaynağı ----------------------
-video_capture = cv2.VideoCapture("//Users//tunahanbg//Code//vscode_files//db_donem_sonu//final_sql_model_detect//car_det_test_v2.mp4")
+video_capture = cv2.VideoCapture(VIDEO_PATH)
+
+if not video_capture.isOpened():
+    print("Error: Video dosyası açılamadı.")
+    exit()
 
 frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = int(video_capture.get(cv2.CAP_PROP_FPS))
+
+if fps <= 0:
+    print("Error: FPS değeri sıfır veya negatif.")
+    exit()
 
 output_video = cv2.VideoWriter(
     "output_video.mp4",
@@ -60,6 +68,10 @@ output_video = cv2.VideoWriter(
     fps,
     (frame_width, frame_height)
 )
+
+if not output_video.isOpened():
+    print("Error: Video yazıcı açılamadı.")
+    exit()
 
 # ---------------------- Çizgi Koordinatları ----------------------
 line_y = frame_height // 2 + 400
@@ -291,4 +303,7 @@ cv2.destroyAllWindows()
 cur.close()
 conn.close()
 
+
+
+#set KMP_DUPLICATE_LIB_OK=TRUE
 
