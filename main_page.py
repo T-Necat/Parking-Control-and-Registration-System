@@ -1,19 +1,13 @@
 import streamlit as st
 import psycopg2
 from psycopg2 import sql
-
 from apps import admin, manager, user, login
+from config import DB_CONFIG
 
 # Veritabanı bağlantı fonksiyonu
 def get_db_connection():
     if "db_connection" not in st.session_state:
-        st.session_state.db_connection = psycopg2.connect(
-            host=st.secrets["postgresql"]["host"],
-            port=st.secrets["postgresql"]["port"],
-            database=st.secrets["postgresql"]["database"],
-            user=st.secrets["postgresql"]["user"],
-            password=st.secrets["postgresql"]["password"]
-        )
+        st.session_state.db_connection = psycopg2.connect(**DB_CONFIG)
     return st.session_state.db_connection
 
 # 1) Kullanıcı adı ve şifreye göre sadece user_name ve role_name döndüren fonksiyon

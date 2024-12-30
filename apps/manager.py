@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import main_page 
 import subprocess, os, signal, re
-
-
+from config import PID_FILE, PIPELINE_SCRIPT
 
 def show_manager_page():
     st.set_page_config(page_title="Manager Sayfası", layout="wide")
@@ -81,7 +80,6 @@ def show_manager_page():
             
             st.dataframe(income_df, use_container_width=True, hide_index=True)
 
-
         except Exception as e:
             st.error(f"Kazanç detayları yüklenirken hata oluştu: {e}")
             
@@ -135,7 +133,6 @@ def show_manager_page():
     
     st.divider()
 
-    
     col5, col6 = st.columns(2)
     
     # Araç tiplerini veritabanından çek
@@ -234,28 +231,21 @@ def show_manager_page():
         except Exception as e:
             st.error(f"Araç silinirken bir hata oluştu: {e}")
     
-    
-
-
     cur.close()
     
     st.divider()
 
     st.subheader("Araç ve Plaka Tespit Sistemi")
-    st.write("Aşağıdaki butonlarla araç ve plaka tespit pipeline'ını kontrol edebilirsiniz.")
+    st.write("Aşağıdaki butonlarla araç ve plaka tespit yapay zeka modelini kontrol edebilirsiniz.")
 
     col3, col4 = st.columns(2)
     
-    # PROCESS PID'yi kaydetmek için dosya adı
-    PID_FILE = "process.pid"
-    
-
     with col3:
-        if st.button("Pipeline'ı Çalıştır"):
+        if st.button("Yapay Zeka Modelini Çalıştır"):
             try:
                 # Script'i çalıştır ve PID'yi kaydet
                 process = subprocess.Popen(
-                    ["python", "/Users/tunahanbg/Code/vscode_files/db_donem_sonu/final_sql_model_detect/pipeline_full_det.py"],  
+                    ["python3", PIPELINE_SCRIPT],  
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
@@ -264,36 +254,30 @@ def show_manager_page():
                 with open(PID_FILE, "w") as f:
                     f.write(str(process.pid))
                 
-                st.success("Pipeline başarıyla çalıştırıldı!")
+                st.success("Yapay zeka modeli başarıyla çalıştırıldı!")
             except Exception as e:
-                st.error(f"Pipeline çalıştırılırken bir hata oluştu: {e}")
+                st.error(f"Yapay zeka modeli çalıştırılırken bir hata oluştu: {e}")
     
     with col4:
-        
-        if st.button("Pipeline'ı Durdur"):
+        if st.button("Yapay Zeka Modelini Durdur"):
             try:
                 # PID'yi dosyadan oku
                 if os.path.exists(PID_FILE):
                     with open(PID_FILE, "r") as f:
                         pid = int(f.read())
                     # İşlemi durdur
-                    os.kill(pid, signal.SIGTERM)  # SIGTERM ile işlemi sonlandır
+                    os.kill(pid, signal.SIGTERM)
                     os.remove(PID_FILE)  # PID dosyasını sil
-                    st.success("Pipeline başarıyla durduruldu!")
+                    st.success("Yapay zeka modeli başarıyla durduruldu!")
                 else:
                     st.warning("Çalışan bir işlem bulunamadı!")
             except Exception as e:
-                st.error(f"Pipeline durdurulurken bir hata oluştu: {e}")
+                st.error(f"Yapay zeka modeli durdurulurken bir hata oluştu: {e}")
                 
     st.divider()
-    
     
     # Çıkış Yap butonu
     if st.button("Çıkış Yap"):
         st.session_state.logged_in = False
         st.session_state.role = None
         st.rerun()
-        
-        
-
-       
