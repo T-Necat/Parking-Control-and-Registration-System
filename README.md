@@ -6,7 +6,7 @@ Made with Python, PostgreSQL | MIT License
 
 A comprehensive parking management system that integrates artificial intelligence for vehicle detection with a robust database management interface. The system automates parking operations through real-time vehicle detection, license plate recognition, and intelligent pricing.
 
-![System Demo](path_to_demo_image_or_gif)
+![System Demo](system_demo.mp4)
 
 ## ✨ Key Features
 
