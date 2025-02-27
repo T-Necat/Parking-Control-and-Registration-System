@@ -6,7 +6,7 @@ Made with Python, PostgreSQL | MIT License
 
 A comprehensive parking management system that integrates artificial intelligence for vehicle detection with a robust database management interface. The system automates parking operations through real-time vehicle detection, license plate recognition, and intelligent pricing.
 
-![System Demo](system_demo.mp4)
+![System Demo](system-demo.mp4)
 
 ## ✨ Key Features
 
@@ -94,7 +94,9 @@ This process will:
 parking-ai-system/
 ├── apps/
 │   ├── login.py
-│   └── main_page.py
+│   └── admin.py
+│   └── user.py
+│   └── manager.py
 ├── db/
 │   ├── database_schema.sql
 │   ├── initial_data.sql
@@ -103,6 +105,7 @@ parking-ai-system/
 │   ├── vehicle_detect_v1.pt
 │   ├── plate_detection.pt
 │   └── plate_number_det.pt
+├── main_page.py
 ├── config.py
 ├── requirements.txt
 └── README.md
@@ -127,18 +130,6 @@ parking-ai-system/
     - User management
     - Report generation
     - System configuration
-
-## 📊 System Architecture
-
-![System Architecture](path_to_architecture_diagram)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 📝 License
 
