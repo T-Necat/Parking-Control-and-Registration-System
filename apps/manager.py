@@ -4,10 +4,11 @@ import main_page
 import subprocess, os, signal, re
 from config import PID_FILE, PIPELINE_SCRIPT
 
+
+
 def show_manager_page():
     st.set_page_config(page_title="Manager Sayfası", layout="wide")
     
-    # Veritabanı bağlantısını alın
     conn = main_page.get_db_connection()
     cur = conn.cursor()
     
@@ -16,7 +17,6 @@ def show_manager_page():
     st.title("Manager Sayfası")
     st.success(f"Hoş geldiniz!")
     
-    # İki sütun oluştur
     col1, col2 = st.columns(2)
 
     with col1:
@@ -32,7 +32,6 @@ def show_manager_page():
                 """)
                 vehicles_data = cur.fetchall()
 
-                # Bir pandas dataframe'e dönüştürelim
                 vehicles_df = pd.DataFrame(vehicles_data, columns=["Plaka", "Tip", "Model Tespiti?"])
                 st.dataframe(vehicles_df, use_container_width=True)
             
@@ -45,7 +44,6 @@ def show_manager_page():
                 """)
                 vehicles_data = cur.fetchall()
 
-                # Bir pandas dataframe'e dönüştürelim
                 vehicles_df = pd.DataFrame(vehicles_data, columns=["Plaka", "Tip", "Model Tespiti?"])
                 st.dataframe(vehicles_df, use_container_width=True)
             
@@ -58,7 +56,6 @@ def show_manager_page():
                 """)
                 vehicles_data = cur.fetchall()
 
-                # Bir pandas dataframe'e dönüştürelim
                 vehicles_df = pd.DataFrame(vehicles_data, columns=["Plaka", "Tip", "Model Tespiti?"])
                 st.dataframe(vehicles_df, use_container_width=True)
             
@@ -69,16 +66,15 @@ def show_manager_page():
     with col2:
         st.subheader("Kazanç Detayları")
         try:
-            # Kazanç detaylarını View'den çekiyoruz
             cur.execute("SELECT * FROM vehicle_income_view;")
             income_data = cur.fetchall()
             income_df = pd.DataFrame(income_data, columns=["Araç Tipi", "Araç Sayısı", "Toplam Kazanç"])
             
-            # Tüm kazançların toplamını hesapla
             total_income = income_df["Toplam Kazanç"].sum()
             st.write(f"**Kazanç:** {total_income:.2f} ₺")
             
             st.dataframe(income_df, use_container_width=True, hide_index=True)
+
 
         except Exception as e:
             st.error(f"Kazanç detayları yüklenirken hata oluştu: {e}")
@@ -89,7 +85,6 @@ def show_manager_page():
 
     if st.button("Toplam Kazancı ve Kayıtları Göster"):
         try:
-            # Toplam kazanç bilgisi
             cur.execute("SELECT total_earnings FROM total_earnings_view;")
             result = cur.fetchone()
             
@@ -99,11 +94,9 @@ def show_manager_page():
             else:
                 st.warning("Henüz kazanç kaydı bulunamadı.")
 
-            # last_end_day_id değerini al
             cur.execute("SELECT last_end_day_id FROM system_info WHERE id = 1;")
             last_end_day_id = cur.fetchone()[0]
 
-            # Sadece last_end_day_id'den sonra eklenen kayıtları göster
             cur.execute("""
                 SELECT record_id, plate_number, entry_time, cost 
                 FROM parking_records 
@@ -133,13 +126,12 @@ def show_manager_page():
     
     st.divider()
 
+    
     col5, col6 = st.columns(2)
     
-    # Araç tiplerini veritabanından çek
     cur.execute("SELECT type_id, type_name FROM vehicle_type;")
-    types = cur.fetchall()  # [(1, 'Car'), (2, 'Motorcycle'), ...]
+    types = cur.fetchall()  
     
-    # Araç tiplerinin ad listesi
     type_names = [t[1] for t in types]
     
     with col5:
@@ -158,7 +150,6 @@ def show_manager_page():
                 st.error("Plaka yalnızca harfler ve rakamlardan oluşmalıdır (örn: '34ABC123').")
                 
             else:
-                # Seçilen araç tipine ait type_id'yi bul
                 selected_type_id = None
                 for t_id, t_name in types:
                     if t_name == selected_type_name:
@@ -166,7 +157,6 @@ def show_manager_page():
                         break
                 
                 try:
-                    # Plaka kontrolü
                     check_query = "SELECT COUNT(*) FROM vehicles WHERE plate_number = %s;"
                     cur.execute(check_query, (plate_input,))
                     exists = cur.fetchone()[0]
@@ -174,7 +164,6 @@ def show_manager_page():
                     if exists > 0:
                         st.error(f"{plate_input} plakalı araç zaten sistemde mevcut!")
                     else:
-                        # Araç tipine ait fiyatı al
                         price_query = "SELECT price FROM vehicle_type WHERE type_id = %s;"
                         cur.execute(price_query, (selected_type_id,))
                         result = cur.fetchone()
@@ -184,7 +173,6 @@ def show_manager_page():
                         else:
                             vehicle_price = result[0]
 
-                            # Araç ve kayıt ekleme
                             insert_vehicle_query = "INSERT INTO vehicles (plate_number, type_id, is_detected) VALUES (%s, %s, %s);"
                             cur.execute(insert_vehicle_query, (plate_input, selected_type_id, False))
 
@@ -203,7 +191,6 @@ def show_manager_page():
         try:
             
             try:
-                # Vehicles tablosundaki bilgileri çekiyoruz
                 cur.execute("""
                     SELECT v.plate_number, t.type_name
                     FROM vehicles v
@@ -211,7 +198,6 @@ def show_manager_page():
                 """)
                 vehicles_data = cur.fetchall()
 
-                # Bir pandas dataframe'e dönüştürelim
                 vehicles_df = pd.DataFrame(vehicles_data, columns=["Plaka", "Tip"])
 
             except Exception as e:
@@ -231,53 +217,59 @@ def show_manager_page():
         except Exception as e:
             st.error(f"Araç silinirken bir hata oluştu: {e}")
     
+    
+
+
     cur.close()
     
     st.divider()
 
     st.subheader("Araç ve Plaka Tespit Sistemi")
-    st.write("Aşağıdaki butonlarla araç ve plaka tespit yapay zeka modelini kontrol edebilirsiniz.")
+    st.write("Aşağıdaki butonlarla araç ve plaka tespit pipeline'ını kontrol edebilirsiniz.")
 
     col3, col4 = st.columns(2)
     
+    
+
     with col3:
-        if st.button("Yapay Zeka Modelini Çalıştır"):
+        if st.button("Pipeline'ı Çalıştır"):
             try:
-                # Script'i çalıştır ve PID'yi kaydet
                 process = subprocess.Popen(
-                    ["python3", PIPELINE_SCRIPT],  
+                    ["python", PIPELINE_SCRIPT],  
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                # PID'yi bir dosyaya kaydet
                 with open(PID_FILE, "w") as f:
                     f.write(str(process.pid))
                 
-                st.success("Yapay zeka modeli başarıyla çalıştırıldı!")
+                st.success("Pipeline başarıyla çalıştırıldı!")
             except Exception as e:
-                st.error(f"Yapay zeka modeli çalıştırılırken bir hata oluştu: {e}")
+                st.error(f"Pipeline çalıştırılırken bir hata oluştu: {e}")
     
     with col4:
-        if st.button("Yapay Zeka Modelini Durdur"):
+        
+        if st.button("Pipeline'ı Durdur"):
             try:
-                # PID'yi dosyadan oku
                 if os.path.exists(PID_FILE):
                     with open(PID_FILE, "r") as f:
                         pid = int(f.read())
-                    # İşlemi durdur
-                    os.kill(pid, signal.SIGTERM)
-                    os.remove(PID_FILE)  # PID dosyasını sil
-                    st.success("Yapay zeka modeli başarıyla durduruldu!")
+                    subprocess.Popen(f"taskkill /F /PID {pid} /T", shell=True)
+                    os.remove(PID_FILE)  
+                    st.success("Pipeline başarıyla durduruldu!")
                 else:
                     st.warning("Çalışan bir işlem bulunamadı!")
             except Exception as e:
-                st.error(f"Yapay zeka modeli durdurulurken bir hata oluştu: {e}")
+                st.error(f"Pipeline durdurulurken bir hata oluştu: {e}")
                 
     st.divider()
     
-    # Çıkış Yap butonu
+    
     if st.button("Çıkış Yap"):
         st.session_state.logged_in = False
         st.session_state.role = None
         st.rerun()
+
+
+

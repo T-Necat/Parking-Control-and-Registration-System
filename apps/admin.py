@@ -8,7 +8,6 @@ def show_admin_page():
     st.title("Admin Sayfası")
     st.success(f"Hoş geldiniz!")
 
-    # Veritabanı bağlantısını alın (önceden tanımlanmış fonksiyon)
     conn = main_page.get_db_connection()
     cur = conn.cursor()
     
@@ -16,7 +15,6 @@ def show_admin_page():
 
     st.divider()
     
-    # İki sütun oluştur: Kullanıcı ekleme ve silme işlemleri için
     col1, col2 = st.columns(2)
 
     
@@ -25,7 +23,6 @@ def show_admin_page():
         new_username = st.text_input("Kullanıcı Adı:", key="new_username")
         new_password = st.text_input("Şifre:", type="password", key="new_password")
 
-        # Admin başka admin ekleyemesin, bu yüzden Admin seçeneği yok
         role_options = {"Manager": 2, "User": 3}
         selected_role_name = st.selectbox("Rol Seçiniz:", list(role_options.keys()), key="role_select", index= None)
 
@@ -55,7 +52,6 @@ def show_admin_page():
 
     with col2:
         st.write("### Kullanıcı Sil")
-        # Mevcut kullanıcıları çek
         cur.execute("SELECT user_id, user_name FROM Users WHERE user_name NOT IN ('admin', 'model');")
         users_data = cur.fetchall()
 
@@ -86,13 +82,10 @@ def show_admin_page():
     col5, col6 = st.columns(2)
     
     
-    # Araç tiplerini veritabanından çek
     cur.execute("SELECT type_id, type_name FROM vehicle_type;")
-    types = cur.fetchall()  # [(1, 'Car'), (2, 'Motorcycle'), ...]
+    types = cur.fetchall()  
     
-    # Araç tiplerinin ad listesi
     type_names = [t[1] for t in types]
-    
     
 
     with col5:
@@ -111,7 +104,6 @@ def show_admin_page():
                 st.error("Plaka yalnızca harfler ve rakamlardan oluşmalıdır (örn: '34ABC123').")
                 
             else:
-                # Seçilen araç tipine ait type_id'yi bul
                 selected_type_id = None
                 for t_id, t_name in types:
                     if t_name == selected_type_name:
@@ -119,7 +111,6 @@ def show_admin_page():
                         break
                 
                 try:
-                    # Plaka kontrolü
                     check_query = "SELECT COUNT(*) FROM vehicles WHERE plate_number = %s;"
                     cur.execute(check_query, (plate_input,))
                     exists = cur.fetchone()[0]
@@ -127,7 +118,6 @@ def show_admin_page():
                     if exists > 0:
                         st.error(f"{plate_input} plakalı araç zaten sistemde mevcut!")
                     else:
-                        # Araç tipine ait fiyatı al
                         price_query = "SELECT price FROM vehicle_type WHERE type_id = %s;"
                         cur.execute(price_query, (selected_type_id,))
                         result = cur.fetchone()
@@ -137,7 +127,6 @@ def show_admin_page():
                         else:
                             vehicle_price = result[0]
 
-                            # Araç ve kayıt ekleme
                             insert_vehicle_query = "INSERT INTO vehicles (plate_number, type_id, is_detected) VALUES (%s, %s, %s);"
                             cur.execute(insert_vehicle_query, (plate_input, selected_type_id, False))
 
@@ -150,14 +139,10 @@ def show_admin_page():
                     conn.rollback()
                     st.error(f"Araç eklenirken hata oluştu: {e}")
 
-    
-        
-     
     with col6:
         
         
         try:
-            # Vehicles tablosundaki bilgileri çekiyoruz
             cur.execute("""
                 SELECT v.plate_number, t.type_name
                 FROM vehicles v
@@ -165,13 +150,11 @@ def show_admin_page():
             """)
             vehicles_data = cur.fetchall()
 
-            # Bir pandas dataframe'e dönüştürelim
             vehicles_df = pd.DataFrame(vehicles_data, columns=["Plaka", "Tip"])
 
         except Exception as e:
             st.error(f"Araçlar listelenirken hata oluştu: {e}")
         
-        # Araç silme işlemi
         st.write("#### Araç Silme İşlemi")
         try:
             plate_list = vehicles_df["Plaka"].tolist()
@@ -194,7 +177,6 @@ def show_admin_page():
                         st.error(f"Araçlar silinirken hata oluştu: {e}")
                     
             with sub_col2:
-                # Tabloyu sıfırlama butonu
                 if st.button("Tüm Araçları Sil"):
                     try:
                         cur.execute("DELETE FROM vehicles;")
@@ -215,18 +197,14 @@ def show_admin_page():
     
     
     
-    # Users tablosundan verileri çek
     cur.execute("SELECT user_id, user_name, password, role_id FROM Users WHERE user_name NOT IN ('admin', 'model');")
     users_data = cur.fetchall()
     df_users = pd.DataFrame(users_data, columns=["User ID", "User Name", "Password", "Role ID"])
 
-    # Vehicles tablosundan verileri çek
     cur.execute("SELECT plate_number, type_id, is_detected FROM Vehicles;")
     vehicles_data = cur.fetchall()
     df_vehicles = pd.DataFrame(vehicles_data, columns=["Plate Number", "Type ID", "Is Detected?"])
     
-
-    # İki sütun oluştur
     col3, col4 = st.columns(2)
 
     with col3:
@@ -239,23 +217,20 @@ def show_admin_page():
         
     st.divider()
         
-    # parking_records tablosundan verileri çek
     cur.execute("SELECT record_id, plate_number, entry_time, cost, user_id FROM parking_records;")
     records_data = cur.fetchall()
     
-    # DataFrame'e dönüştür
     df_records = pd.DataFrame(records_data, columns=["Record ID", "Plate Number", "Entry Time", "Cost", "User ID"])
 
     st.write("### Parking Records")
     st.dataframe(df_records, use_container_width=True)
     
-    # Tabloyu sıfırlama butonu
     if st.button("Tabloyu Sıfırla"):
         try:
             cur.execute("DELETE FROM parking_records;")
             conn.commit()
             st.success("Tablo başarıyla sıfırlandı!")
-            st.rerun()  # Sayfayı yenileyerek güncel hali göster
+            st.rerun()  
         except Exception as e:
             conn.rollback()
             st.error(f"Tablo sıfırlanırken hata oluştu: {e}")

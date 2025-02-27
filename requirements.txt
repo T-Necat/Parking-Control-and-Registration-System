@@ -1,0 +1,21 @@
+# AI and Computer Vision
+opencv-python==4.8.0.74
+ultralytics==8.0.145
+supervision==0.11.1
+torch==2.0.1
+torchvision==0.15.2
+
+# Web Interface
+streamlit==1.22.0
+streamlit-option-menu==0.3.6
+plotly==5.14.1
+
+# Database
+psycopg2-binary==2.9.6
+SQLAlchemy==2.0.15
+
+# Utility Libraries
+numpy==1.24.3
+pandas==2.0.2
+Pillow==9.5.0
+python-dotenv==1.0.0
