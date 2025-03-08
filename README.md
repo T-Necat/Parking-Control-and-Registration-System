@@ -1,4 +1,4 @@
-# AI-Powered Parking Management System 🚗
+# PMS (AI-Powered Parking Management System) 🚗
 
 Made with Python, PostgreSQL | MIT License
 
